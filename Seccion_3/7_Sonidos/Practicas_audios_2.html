@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+
+<head>
+
+    <title>Audio 2</title>
+    <style>
+        audio::-webkit-media-controls-panel {
+            background-color: green;
+        }
+    </style>
+</head>
+<body>
+     <audio id="audioAlarma" controls>
+        <source src="Audios/cries_pokemon_latest_1.ogg" type="audio/mpeg">
+        Sonido habilitado 
+    </audio>
+
+    <Script>
+
+        let elementoSonidoAlarma = document.getElementById("audioAlarma")
+        function test() {
+            elementoSonidoAlarma.play();
+        }
+    </Script>
+
+    <img src="Audios/1.png" width="200px"
+    alt="Bulbasaur"
+    aling="left"
+    hspace="20">
+    
+</body>
+</html>
