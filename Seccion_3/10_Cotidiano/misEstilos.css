@@ -1,0 +1,29 @@
+button {
+    color: aqua;
+    background-color: bisque;
+    width: 100px;
+    height: 50px;
+}
+
+h1 {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 50px;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin-top: 50px;
+    }
+
+    #contador {
+    font-size: 2em;
+    margin: 20px;
+    }
+
+    button {
+    font-size: 1em;
+    padding: 10px;
+    margin: 5px;
+    cursor: pointer;
+    }

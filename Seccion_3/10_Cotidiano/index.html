@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+
+<head>
+
+    <title>Juego</title>
+    <link rel="stylesheet" href="misEstilos.css">
+
+</head>
+<body onload = "comenzarContador()">
+    <h1>Juego</h1>
+    <div id="Contador">30</div>
+
+    <script>
+    let tiempo = 30;
+    let intervalo;
+
+    function comenzarContador() {
+        
+        if (!intervalo) {
+            intervalo = setInterval(contar, 1000);
+        }
+    }
+
+    function contar() {
+        if (tiempo > 0) {
+            tiempo--;
+            document.getElementById("Contador").innerText = tiempo;
+        } else {
+            detenerContador();
+            alert("¡Tiempo terminado, GAME OVER!");
+        }
+    }
+
+    function detenerContador() {
+        clearInterval(intervalo);
+        intervalo = null;
+    }
+
+    function reiniciarContador() {
+        clearInterval(intervalo);
+        intervalo = null; 
+    }
+
+    function mostrarFecha() {
+        alert(new Date().toLocaleDateString('es-Es'))
+    }
+</script>
+
+
+
+    <p>¿En cual continente se encuentra Belgica?</p>
+    <input type="text" id="respuesta1">
+
+    <p>¿En cual año fue la primera guerra mundial?</p>
+    <input type="text" id="respuesta2">
+
+    <p>¿En que año se descubrio America?</p>
+    <input type="text" id="respuesta3">
+
+    <p>¿En que año fue el primer mundial de futbol?</p>
+    <input type="text" id="respuesta4">
+
+    <p>¿Quien es el maximo goleador de las selecciones de futbol?</p>
+    <input type="text" id="respuesta5">
+    <br>
+    <br>
+    <button onclick="button() + mostrarFecha()">Terminar</button>
+    <br>
+    <button onclick="location.reload()">Volver a intentar</button>
+
+
+    <script>
+
+function button() {
+    detenerContador()
+    clearInterval(intervalo);
+    intervalo = null;
+
+    let r1 = document.getElementById("respuesta1").value;
+    let r2 = document.getElementById("respuesta2").value;
+    let r3 = document.getElementById("respuesta3").value;
+    let r4 = document.getElementById("respuesta4").value;
+    let r5 = document.getElementById("respuesta5").value;
+
+    alert("Tus respuestas son:\n" +
+        "1. " + r1 + "\n" +
+        "2. " + r2 + "\n" +
+        "3. " + r3 + "\n" +
+        "4. " + r4 + "\n" +
+        "5. " + r5);
+}
+</script>
+</body>
+</html>
