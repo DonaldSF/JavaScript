@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+
+<head>
+
+    <title>Practica Random 1</title>
+</head>
+<body>
+    <p>
+        <button onclick="mostrarMensaje(50, 10)">click aqui</button>
+    </p>
+    <h2>Número Aleatorio: <span id="textoAleatorio">---</span></h2>
+    <script>
+        function mostrarMensaje(maximo, minimo) {
+            maximo = maximo + 1;
+            let Aleatorio = document.getElementById("textoAleatorio") ;
+             resultado = Math.floor(Math.random() * (maximo - minimo) + minimo);
+            alert(resultado);
+        }
+    </script>
+    
+</body>
+</html>

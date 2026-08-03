@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+
+<head>
+
+    <title>Practica Random 2</title>
+</head>
+<body>
+    <p>
+        <button onclick="mostrarMensaje(100 - 50)">click aqui</button>
+    </p>
+    <script>
+        function mostrarMensaje(maximo, minimo) {
+            maximo = maximo + 1;
+            minimo = minimo - 1;
+            let aleatorio = Math.floor(Math.random() * (100 - 50) + 50);
+            alert(aleatorio);
+        }
+    </script>
+    
+</body>
+</html>
