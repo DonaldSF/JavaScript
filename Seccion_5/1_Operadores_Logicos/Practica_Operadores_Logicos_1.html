@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+
+<head>
+
+    <title>Operadores Logicos 1</title>
+</head>
+<body>
+    <p>Ingrese un numero</p>
+    <input type="number" id="numero1">
+
+    <p>Ingrese un numero</p>
+    <input type="number" id="numero2">
+
+    <button onclick="calcular()">Enviar</button>
+
+    <h3 id="respuesta1">---</h3>
+
+    <script>
+        
+        
+        function calcular() {
+            let elementoNumero1 = Number(document.getElementById("numero1").value);
+            let elementoNumero2 = Number(document.getElementById("numero2").value);
+            let elementoRespuesta1 = document.getElementById("respuesta1");
+    
+            let respuesta1 = elementoNumero1 > elementoNumero2;
+            elementoRespuesta1.textContent = respuesta1;
+            }
+
+
+    </script>
+</body>
+</html>
