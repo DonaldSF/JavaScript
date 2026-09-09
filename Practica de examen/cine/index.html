@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+
+<head>
+
+    <title>Cotidiano Cine</title>
+    
+    <link rel="stylesheet" href="misEstilos.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>Recomendador de Películas</h1>
+        <p class="descripcion">Ingresa tu edad y selecciona un género para sugerirte la mejor opción.</p>
+
+
+        <div class="input-group">
+            <label for="edad">Edad:</label>
+            <input type="number" id="edad" placeholder="Ej. 15" min="0">
+        </div>
+
+        <div class="input-group">
+            <label for="Genero">Género:</label>
+            <select id="Genero">
+                <option value="Drama">Drama</option>
+                <option value="Comedia">Comedia</option>
+                <option value="Musical">Musical</option>
+                <option value="Crimen">Crimen</option>
+            </select>
+        </div>
+
+
+        <div class="botones">
+            <button onclick="generarRecomendacion()" class="btn-principal">Generar Recomendación</button>
+            <button onclick="reiniciar()" class="btn-secundario">Reiniciar</button>
+        </div>
+
+        <!-- Párrafo vacío para mostrar los resultados -->
+        <div class="resultado-box">
+            <p id="resultado"></p>
+        </div>
+    </div>
+
+    <script src="misScripts.js"></script>
+</body>
+</html>
