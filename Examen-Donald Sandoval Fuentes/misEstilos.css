@@ -1,0 +1,27 @@
+label {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: xx-large;
+}
+button {
+    font-family: 'Courier New', Courier, monospace;
+    background-color: skyblue;
+}
+input {
+    font-size: large;
+    background-color: aliceblue;
+}
+select {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: medium;
+}
+div {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: x-large;
+}
+h1 {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: large;
+}
+body {
+    background-color: wheat;
+}

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+
+<head>
+
+    <title>Examen</title>
+    <link rel="stylesheet" href="misEstilos.css">
+</head>
+<body>
+    <label for="Recomendador">Recomendador de actividad recreativa</label>
+    <br>
+    <br>
+    <label for="presupuesto">Presupuesto</label>
+    <input type="number" id="presupuesto">
+    <br>
+    <br>
+    <label for="personas">Cantidad de personas</label>
+    <input type="number" id="personas">
+    <br>
+    <br>
+    <label for="Actividad">Actividad recreativa</label>
+    <select name="Tipo de actividad" id="Actividad">
+        <option value="Deportes">Deportes</option>
+        <option value="Entretenimiento">Entretenimiento</option>
+        <option value="Turismo">turismo</option>
+        <option value="Actividades familiares">Actividad familiares</option>
+    </select>
+    <br>
+    <br>
+    <button onclick="recomendacion()">Generar recomendacion</button>
+    <button onclick="reiniciar()">Reiniciar</button>
+
+    <p id="resultado"></p>
+
+    <script src="misScripts.js"></script>
+
+
+
+    
+</body>
+</html>

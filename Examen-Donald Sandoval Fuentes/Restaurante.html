@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+
+<head>
+
+    <title>Recomendador de restaurantes</title>
+    <link rel="stylesheet" href="misEstilos.css">
+</head>
+<body>
+    <label for="Recomendador">Recomendador de comidas</label>
+    <br>
+    <br>
+    <div class="container">Presupuesto disponible</div>
+    <input type="number" id="presupuesto">
+    <select name="Tipo de comida" id="Comida">
+        <option value="Comida rapida">Comida rapida</option>
+        <option value="Italiana">Italiana</option>
+        <option value="Costarricense">Costarricense</option>
+        <option value="Asiatica">Asiatica</option>
+    </select>
+    <br>
+    <br>
+    <button onclick="Recomendacion()">Ejecutar proceso de recomendacion</button>
+    <button onclick="reiniciar()">Reiniciar</button>
+    <p id="resultado"></p>
+
+    <script src="misScripts.js"></script>
+</body>
+</html>
