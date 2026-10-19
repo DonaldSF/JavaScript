@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>VS Code Snake</title>
+    <style>
+        body { background: #1e1e1e; color: white; text-align: center; font-family: sans-serif; }
+        canvas { background: #111; border: 2px solid #007acc; display: block; margin: 20px auto; }
+    </style>
+</head>
+<body>
+    <h1>VS Code Snake 🐍</h1>
+    <p>Usa las Flechas del Teclado para moverte.</p>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const grid = 20;
+        let snake = [{x: 160, y: 160}], dx = grid, dy = 0;
+        let apple = {x: 320, y: 320}, score = 0;
+
+        function main() {
+            if (gameOver()) return alert(`Game Over. Puntuación: ${score}`);
+            setTimeout(() => { clearCanvas(); drawApple(); moveSnake(); drawSnake(); main(); }, 100);
+        }
+        function clearCanvas() { ctx.fillStyle = "#111"; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+        function drawSnake() { ctx.fillStyle = '#007acc'; snake.forEach(part => ctx.fillRect(part.x, part.y, grid-2, grid-2)); }
+        function moveSnake() {
+            const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+            snake.unshift(head);
+            if (head.x === apple.x && head.y === apple.y) { score++; randomApple(); } else { snake.pop(); }
+        }
+        function randomApple() {
+            apple.x = Math.floor(Math.random() * (canvas.width/grid)) * grid;
+            apple.y = Math.floor(Math.random() * (canvas.height/grid)) * grid;
+        }
+        function drawApple() { ctx.fillStyle = '#ff5555'; ctx.fillRect(apple.x, apple.y, grid-2, grid-2); }
+        function gameOver() {
+            const head = snake[0];
+            const hitWall = head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height;
+            const hitSelf = snake.slice(1).some(part => part.x === head.x && part.y === head.y);
+            return hitWall || hitSelf;
+        }
+        document.addEventListener("keydown", e => {
+            if (e.key === "ArrowUp" && dy === 0) { dx = 0; dy = -grid; }
+            if (e.key === "ArrowDown" && dy === 0) { dx = 0; dy = grid; }
+            if (e.key === "ArrowLeft" && dx === 0) { dx = -grid; dy = 0; }
+            if (e.key === "ArrowRight" && dx === 0) { dx = grid; dy = 0; }
+        });
+        randomApple(); main();
+    </script>
+</body>
+</html>

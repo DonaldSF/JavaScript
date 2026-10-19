@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>VS Code Tetris</title>
+    <style>
+        body { background: #1e1e1e; color: white; text-align: center; font-family: sans-serif; }
+        canvas { background: #111; border: 2px solid #569cd6; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>VS Code Tetris 🧱</h1>
+    <p>Mover: Flechas Izq/Der | Rotar: Flecha Arriba | Bajar: Flecha Abajo</p>
+    <canvas id="tetris" width="240" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById("tetris");
+        const context = canvas.getContext("2d");
+        context.scale(20, 20);
+
+        const arena = Array.from({length: 20}, () => Array(12).fill(0));
+        const player = { pos: {x: 5, y: 0}, matrix: [[0,1,0],[1,1,1],[0,0,0]] };
+
+        function drawMatrix(matrix, offset) {
+            matrix.forEach((row, y) => { row.forEach((value, x) => {
+                if (value !== 0) { context.fillStyle = '#569cd6'; context.fillRect(x + offset.x, y + offset.y, 1, 1); }
+            });});
+        }
+        function draw() {
+            context.fillStyle = '#111'; context.fillRect(0, 0, canvas.width, canvas.height);
+            drawMatrix(arena, {x: 0, y: 0}); drawMatrix(player.matrix, player.pos);
+        }
+        function merge(arena, player) {
+            player.matrix.forEach((row, y) => { row.forEach((value, x) => {
+                if (value !== 0) { arena[y + player.pos.y][x + player.pos.x] = value; }
+            });});
+        }
+        function collide(arena, player) {
+            const [m, o] = [player.matrix, player.pos];
+            for (let y = 0; y < m.length; ++y) {
+                for (let x = 0; x < m[y].length; ++x) {
+                    if (m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) return true;
+                }
+            }
+            return false;
+        }
+        function playerDrop() { player.pos.y++; if (collide(arena, player)) { player.pos.y--; merge(arena, player); player.pos.y = 0; player.pos.x = 5; } dropCounter = 0; }
+        
+        let dropCounter = 0, lastTime = 0;
+        function update(time = 0) {
+            const deltaTime = time - lastTime; lastTime = time; dropCounter += deltaTime;
+            if (dropCounter > 1000) playerDrop();
+            draw(); requestAnimationFrame(update);
+        }
+
+        document.addEventListener('keydown', event => {
+            if (event.key === "ArrowLeft") { player.pos.x--; if(collide(arena, player)) player.pos.x++; }
+            if (event.key === "ArrowRight") { player.pos.x++; if(collide(arena, player)) player.pos.x--; }
+            if (event.key === "ArrowDown") playerDrop();
+        });
+        update();
+    </script>
+</body>
+</html>

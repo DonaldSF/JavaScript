@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+
+<head>
+
+    <title>Practica Do while 1</title>
+</head>
+<body>
+    <script>
+
+function testLoop(totalVueltas) {
+    let contador = 0;
+
+
+    totalVueltas = parseInt(totalVueltas);
+
+    if (isNaN(totalVueltas) || totalVueltas <= 0) {
+    console.log("Por favor, ingresa un número válido mayor a 0.");
+    return;
+    }
+
+
+    do {
+    contador++;
+    console.log("Vuelta número: " + contador);
+    } while (contador < totalVueltas);
+}
+
+
+let entradaUsuario = prompt("Cuantas vueltas quieres dar en el ciclo");
+
+
+testLoop(entradaUsuario);
+</script>
+
+    
+</body>
+</html>

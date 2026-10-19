@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>VS Code - Penalty Shooters</title>
+    <style>
+        :root {
+            --bg-color: #1e1e1e;
+            --panel-bg: #252526;
+            --text-color: #d4d4d4;
+            --vs-blue: #007acc;
+            --vs-green: #4ec9b0;
+            --vs-red: #f44336;
+            --field-green: #1e4620;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .stadium {
+            width: 500px;
+            background: var(--panel-bg);
+            border: 2px solid #3c3c3c;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+        }
+        h1 { margin: 0 0 5px 0; font-size: 1.6rem; color: #fff; }
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            background: #111;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        
+        /* Portería de fútbol interactiva */
+        .goal-container {
+            background: var(--field-green);
+            padding: 20px;
+            border-radius: 6px;
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .goal {
+            width: 360px;
+            height: 160px;
+            border: 5px solid white;
+            border-bottom: none;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            position: relative;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Zonas de tiro (Botones invisibles sobre la portería) */
+        .zone {
+            border: 1px dashed rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.7);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .zone:hover {
+            background: rgba(0, 122, 204, 0.4);
+            color: #fff;
+        }
+
+        /* Representación visual de resultados */
+        #keeper {
+            position: absolute;
+            width: 40px;
+            height: 60px;
+            background: #ffaa00;
+            border-radius: 4px;
+            top: 50px;
+            left: 160px;
+            transition: all 0.3s ease-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #000;
+            font-size: 0.8rem;
+            pointer-events: none;
+        }
+        
+        .feedback {
+            font-size: 1.3rem;
+            font-weight: bold;
+            height: 35px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="stadium">
+        <h1>⚽ Penalty Shooters // Striker Edition</h1>
+        <p style="color:#858585; font-size:0.9rem; margin-bottom:15px;">Haz clic en una zona de la portería para disparar</p>
+
+        <div class="score-board">
+            <span style="color: var(--vs-green);">Goles: <span id="goals">0</span></span>
+            <span style="color: var(--vs-red);">Atajadas: <span id="saves">0</span></span>
+        </div>
+
+        <div class="goal-container">
+            <div class="goal">
+                <div class="zone" onclick="shoot(1)">Arriba Izq</div>
+                <div class="zone" onclick="shoot(2)">Arriba Centro</div>
+                <div class="zone" onclick="shoot(3)">Arriba Der</div>
+                <div class="zone" onclick="shoot(4)">Abajo Izq</div>
+                <div class="zone" onclick="shoot(5)">Abajo Centro</div>
+                <div class="zone" onclick="shoot(6)">Abajo Der</div>
+                
+                <!-- El Portero -->
+                <div id="keeper">GK</div>
+            </div>
+        </div>
+
+        <div class="feedback" id="feedback-text">¡Prepara el disparo!</div>
+        
+        <button onclick="resetScore()" style="background:#444; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-family:sans-serif;">
+            Reiniciar Marcador
+        </button>
+    </div>
+
+    <script>
+        let goals = 0;
+        let saves = 0;
+        const keeper = document.getElementById('keeper');
+        const feedbackText = document.getElementById('feedback-text');
+        const goalsDisplay = document.getElementById('goals');
+        const savesDisplay = document.getElementById('saves');
+
+        // Mapeo de posiciones para mover al portero visualmente en la cuadrícula
+        const positions = {
+            1: { top: '15px', left: '40px' },    // Arriba Izq
+            2: { top: '15px', left: '160px' },   // Arriba Centro
+            3: { top: '15px', left: '280px' },   // Arriba Der
+            4: { top: '85px', left: '40px' },    // Abajo Izq
+            5: { top: '85px', left: '160px' },   // Abajo Centro
+            6: { top: '85px', left: '280px' }    // Abajo Der
+        };
+
+        function shoot(playerChoice) {
+            // El portero elige una de las 6 zonas al azar para lanzarse
+            const keeperChoice = Math.floor(Math.random() * 6) + 1;
+            
+            // Mover físicamente al portero en la interfaz
+            keeper.style.top = positions[keeperChoice].top;
+            keeper.style.left = positions[keeperChoice].left;
+
+            if (playerChoice === keeperChoice) {
+                // Atajada
+                saves++;
+                savesDisplay.innerText = saves;
+                feedbackText.innerText = "❌ ¡ATAJADÓN DEL PORTERO!";
+                feedbackText.style.color = "var(--vs-red)";
+            } else {
+                // Gol
+                goals++;
+                goalsDisplay.innerText = goals;
+                feedbackText.innerText = "⚽ ¡GOOOOOOOL!";
+                feedbackText.style.color = "var(--vs-green)";
+            }
+        }
+
+        function resetScore() {
+            goals = 0;
+            saves = 0;
+            goalsDisplay.innerText = '0';
+            savesDisplay.innerText = '0';
+            feedbackText.innerText = "Marcador a cero. ¡Dispara!";
+            feedbackText.style.color = "var(--text-color)";
+            // Regresar al portero al centro
+            keeper.style.top = '50px';
+            keeper.style.left = '160px';
+        }
+    </script>
+</body>
+</html>

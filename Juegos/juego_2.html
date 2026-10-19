@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>VS Code Dino</title>
+    <style>
+        body { background: #1e1e1e; color: white; text-align: center; font-family: sans-serif; overflow: hidden;}
+        #game { width: 600px; height: 150px; background: #252526; margin: 50px auto; position: relative; border-bottom: 2px solid white; }
+        #dino { width: 20px; height: 40px; background: #4ec9b0; position: absolute; bottom: 0; left: 50px; }
+        #cactus { width: 20px; height: 30px; background: #ff5555; position: absolute; bottom: 0; right: 0; }
+        .jump { animation: jump 0.5s linear; }
+        @keyframes jump { 0%, 100% { bottom: 0; } 50% { bottom: 80px; } }
+    </style>
+</head>
+<body>
+    <h1>VS Code Dino 🦖</h1>
+    <p>Presiona la <strong>Barra Espaciadora</strong> para saltar.</p>
+    <div id="game">
+        <div id="dino"></div>
+        <div id="cactus"></div>
+    </div>
+    <h3 id="score">Puntos: 0</h3>
+    <script>
+        const dino = document.getElementById("dino");
+        const cactus = document.getElementById("cactus");
+        const scoreTxt = document.getElementById("score");
+        let score = 0, isAlive = true;
+
+        document.addEventListener("keydown", e => { if (e.key === " " || e.code === "Space") jump(); });
+        function jump() { if (!dino.classList.contains("jump")) { dino.classList.add("jump"); setTimeout(() => dino.classList.remove("jump"), 500); } }
+
+        let cactusPos = 600;
+        setInterval(() => {
+            if (!isAlive) return;
+            cactusPos -= 5;
+            if (cactusPos < -20) { cactusPos = 600; score++; scoreTxt.innerText = `Puntos: ${score}`; }
+            cactus.style.left = cactusPos + "px";
+
+            let dinoBottom = parseInt(window.getComputedStyle(dino).getPropertyValue("bottom"));
+            if (cactusPos > 50 && cactusPos < 70 && dinoBottom <= 30) {
+                isAlive = false; alert(`¡Game Over! Conseguiste ${score} puntos.`); window.location.reload();
+            }
+        }, 10);
+    </script>
+</body>
+</html>

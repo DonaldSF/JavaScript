@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>VS Code - Test de Reacción</title>
+    <style>
+        :root {
+            --bg-color: #1e1e1e;
+            --panel-bg: #252526;
+            --text-color: #d4d4d4;
+            --vs-blue: #007acc;
+            --vs-red: #f44336;
+            --vs-green: #4ec9b0;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h1 { margin-bottom: 5px; color: #fff; font-size: 1.8rem; }
+        .subtitle { color: #858585; margin-bottom: 25px; font-size: 0.9rem; }
+        
+        /* Zona de clic principal */
+        #game-zone {
+            width: 500px;
+            height: 300px;
+            background-color: var(--panel-bg);
+            border: 2px solid #3c3c3c;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.1s, border-color 0.1s;
+        }
+        #game-text {
+            font-size: 1.4rem;
+            font-weight: bold;
+            text-align: center;
+            pointer-events: none;
+        }
+        
+        /* Estados de la pantalla */
+        .waiting { background-color: var(--vs-red) !important; color: white; border-color: #b71c1c !important; }
+        .ready { background-color: var(--vs-green) !important; color: #1e1e1e !important; border-color: #0b9b7e !important; }
+        
+        /* Marcador de récord */
+        #stats {
+            margin-top: 20px;
+            font-size: 1.1rem;
+            color: #cccccc;
+        }
+        .ms-highlight { font-weight: bold; color: var(--vs-blue); }
+    </style>
+</head>
+<body>
+
+    <h1>Test de Velocidad de Reacción ⚡</h1>
+    <p class="subtitle">Haz clic en el recuadro gris para empezar.</p>
+
+    <div id="game-zone" onclick="handleClick()">
+        <div id="game-text">Haz clic para empezar</div>
+    </div>
+
+    <div id="stats">
+        Mejor tiempo: <span id="best-score" class="ms-highlight">-</span>
+    </div>
+
+    <script>
+        const gameZone = document.getElementById('game-zone');
+        const gameText = document.getElementById('game-text');
+        const bestScoreDisplay = document.getElementById('best-score');
+
+        let state = 'idle'; // Estados: idle, waiting, ready, result
+        let startTime, timeoutId;
+        let bestScore = Infinity;
+
+        function handleClick() {
+            if (state === 'idle' || state === 'result') {
+                // Iniciar el juego: Esperar el cambio de color
+                state = 'waiting';
+                gameZone.className = 'waiting';
+                gameText.innerText = 'Espera al color VERDE...';
+                
+                // Tiempo aleatorio entre 1.5 y 4 segundos
+                const randomTime = Math.random() * 2500 + 1500;
+                timeoutId = setTimeout(triggerReady, randomTime);
+
+            } else if (state === 'waiting') {
+                // Error: Hizo clic antes de tiempo (Trampa)
+                clearTimeout(timeoutId);
+                state = 'result';
+                gameZone.className = '';
+                gameText.innerHTML = '❌ ¡Demasiado pronto!<br><span style="font-size:1rem; font-weight:normal;">Haz clic para reintentar.</span>';
+
+            } else if (state === 'ready') {
+                // Éxito: Se calcula el tiempo de reacción
+                const endTime = Date.now();
+                const reactionTime = endTime - startTime;
+                state = 'result';
+                gameZone.className = '';
+                
+                // Evaluar rango de reflejos
+                let rank = '';
+                if (reactionTime < 180) rank = '🥷 ¡Reflejos de Ninja!';
+                else if (reactionTime < 250) rank = '⚡ Promedio rápido';
+                else if (reactionTime < 350) rank = '🐢 Algo lento';
+                else rank = '💤 ¿Te estabas durmiendo?';
+
+                gameText.innerHTML = `${reactionTime} ms<br><span style="font-size:1.1rem; font-weight:normal;">${rank}</span><br><span style="font-size:0.9rem; font-weight:normal; color:#858585;"><br>Haz clic para volver a jugar</span>`;
+
+                // Guardar mejor puntuación
+                if (reactionTime < bestScore) {
+                    bestScore = reactionTime;
+                    bestScoreDisplay.innerText = bestScore + ' ms';
+                }
+            }
+        }
+
+        function triggerReady() {
+            state = 'ready';
+            gameZone.className = 'ready';
+            gameText.innerText = '¡¡HAZ CLIC YA!!';
+            startTime = Date.now();
+        }
+    </script>
+</body>
+</html>

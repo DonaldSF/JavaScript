@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+
+<head>
+
+    <title>Practica Do while 2</title>
+</head>
+<body>
+    <script>
+
+function tablaMultiplicar(numero) {
+    let multiplicador = 1;
+    
+
+    numero = parseInt(numero);
+
+    if (isNaN(numero)) {
+    console.log("Por favor, ingresa un número válido.");
+    return;
+    }
+
+    console.log("Tabla del " + numero + ":");
+
+
+    do {
+      let resultado = numero * multiplicador;
+    console.log(numero + " x " + multiplicador + " = " + resultado);
+    multiplicador++;
+    } while (multiplicador <= 10);
+}
+
+
+let numeroUsuario = prompt("De que numero quieres ver la tabla de multiplicar");
+
+
+tablaMultiplicar(numeroUsuario);
+</script>
+
+    
+</body>
+</html>
+
