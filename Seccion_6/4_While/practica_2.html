@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Practicas While 2</title>
+</head>
+<body>
+    <script>
+
+        function testLoop(numero) {
+
+            while (numero <= 10) {
+                console.log(numero);
+                numero++; 
+            }
+        }
+
+
+        let valorInicial = parseInt(prompt("Introduce un numero inicial (menor o igual a 10):"));
+
+
+        if (!isNaN(valorInicial)) {
+            testLoop(valorInicial);
+        } else {
+            console.log("Por favor, introduce un numero válido.");
+        }
+    </script>
+</body>
+</html>

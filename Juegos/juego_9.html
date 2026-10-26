@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Póker HTML</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #1b4d3e; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
+        h1 { margin: 5px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        .table { background: #0f6344; border: 8px solid #5c3a21; border-radius: 150px; width: 90%; max-width: 800px; padding: 40px; box-shadow: inset 0 0 50px rgba(0,0,0,0.6), 0 10px 20px rgba(0,0,0,0.4); display: flex; flex-direction: column; gap: 20px; align-items: center; }
+        .section { display: flex; flex-direction: column; align-items: center; width: 100%; }
+        .section-title { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; color: #a3e2c9; margin-bottom: 5px; }
+        .card-container { display: flex; gap: 10px; min-height: 110px; justify-content: center; align-items: center; }
+        .card { width: 75px; height: 108px; background: white; border-radius: 6px; display: flex; flex-direction: column; justify-content: space-between; padding: 5px; color: black; font-weight: bold; font-size: 1.2rem; position: relative; box-shadow: 3px 3px 5px rgba(0,0,0,0.3); transition: transform 0.2s; }
+        .card.red { color: #d32f2f; }
+        .card.back { background: radial-gradient(#e74c3c 10%, transparent 11%), radial-gradient(#e74c3c 10%, transparent 11%), #c0392b; background-size: 10px 10px; background-position: 0 0, 5px 5px; border: 3px solid white; color: transparent; }
+        .card .top-left { align-self: flex-start; }
+        .card .bottom-right { align-self: flex-end; transform: rotate(180deg); }
+        .card .suit-center { font-size: 2rem; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .controls { display: flex; gap: 15px; margin-top: 15px; }
+        button { background: #ffca28; border: none; padding: 10px 25px; font-size: 1.1rem; font-weight: bold; color: #333; border-radius: 20px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: 0.2s; }
+        button:hover { background: #ffe082; transform: translateY(-2px); }
+        button:active { transform: translateY(0); }
+        #message { font-size: 1.3rem; font-weight: bold; background: rgba(0,0,0,0.4); padding: 8px 20px; border-radius: 10px; min-height: 40px; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <h1>Texas Hold'em - Mini Póker</h1>
+    
+    <div class="table">
+        <!-- Computadora -->
+        <div class="section">
+            <div class="section-title">Computadora (<span id="cpu-hand-name">Oculto</span>)</div>
+            <div class="card-container" id="cpu-cards"></div>
+        </div>
+
+        <!-- Comunitarias -->
+        <div class="section">
+            <div class="section-title">Cartas Comunitarias (The Board)</div>
+            <div class="card-container" id="community-cards"></div>
+        </div>
+
+        <!-- Jugador -->
+        <div class="section">
+            <div class="section-title">Tu Mano (<span id="player-hand-name">Esperando</span>)</div>
+            <div class="card-container" id="player-cards"></div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="deal-btn" onclick="dealHand()">Repartir</button>
+        <button id="reveal-btn" onclick="revealWinner()" style="display:none;">Ver Ganador</button>
+    </div>
+
+    <p id="message">¡Presiona Repartir para comenzar!</p>
+
+    <script>
+        const suits = [ { name: '♠', class: 'black' }, { name: '♥', class: 'red' }, { name: '♦', class: 'red' }, { name: '♣', class: 'black' } ];
+        const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+        const valueMap = { '2':2, '3':3, '4':4, '5':5, '6':6, '7':7, '8':8, '9':9, '10':10, 'J':11, 'Q':12, 'K':13, 'A':14 };
+
+        let deck = [];
+        let playerHand = [];
+        let cpuHand = [];
+        let communityCards = [];
+
+        function createDeck() {
+            deck = [];
+            for (let suit of suits) {
+                for (let val of values) {
+                    deck.push({ value: val, suit: suit.name, class: suit.class, score: valueMap[val] });
+                }
+            }
+        }
+
+        function shuffleDeck() {
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+        }
+
+        function createCardHTML(card, isHidden = false) {
+            if (isHidden) return `<div class="card back"></div>`;
+            return `
+                <div class="card ${card.class}">
+                    <div class="top-left">${card.value}<br>${card.suit}</div>
+                    <div class="suit-center">${card.suit}</div>
+                    <div class="bottom-right">${card.value}<br>${card.suit}</div>
+                </div>`;
+        }
+
+        function dealHand() {
+            createDeck();
+            shuffleDeck();
+
+            playerHand = [deck.pop(), deck.pop()];
+            cpuHand = [deck.pop(), deck.pop()];
+            communityCards = [deck.pop(), deck.pop(), deck.pop(), deck.pop(), deck.pop()];
+
+            // Renderizar cartas ocultas de la CPU
+            document.getElementById('cpu-cards').innerHTML = createCardHTML(null, true) + createCardHTML(null, true);
+            document.getElementById('cpu-hand-name').innerText = "Oculto";
+
+            // Renderizar cartas comunitarias
+            document.getElementById('community-cards').innerHTML = communityCards.map(c => createCardHTML(c)).join('');
+
+            // Renderizar cartas del Jugador
+            document.getElementById('player-cards').innerHTML = playerHand.map(c => createCardHTML(c)).join('');
+            
+            let pEval = evaluate7Cards(playerHand, communityCards);
+            document.getElementById('player-hand-name').innerText = pEval.handName;
+
+            document.getElementById('message').innerText = "Las cartas están en la mesa. ¿Quién ganará?";
+            document.getElementById('deal-btn').innerText = "Volver a jugar";
+            document.getElementById('reveal-btn').style.display = "inline-block";
+        }
+
+        // Evalúa combinaciones de Poker de forma simplificada (Pareja, Doble Pareja, Trío, Color, Carta Alta)
+        function evaluate7Cards(hole, community) {
+            let all = [...hole, ...community];
+            
+            // Contar frecuencias de valores
+            let counts = {};
+            all.forEach(c => counts[c.score] = (counts[c.score] || 0) + 1);
+            
+            // Contar frecuencias de palos (Color)
+            let suitCounts = {};
+            all.forEach(c => suitCounts[c.suit] = (suitCounts[c.suit] || 0) + 1);
+            let hasFlush = Object.values(suitCounts).some(v => v >= 5);
+
+            let pairs = 0, triples = 0, pokers = 0;
+            let rankValues = Object.keys(counts).map(Number).sort((a,b) => b - a);
+
+            for (let x in counts) {
+                if (counts[x] === 2) pairs++;
+                if (counts[x] === 3) triples++;
+                if (counts[x] === 4) pokers++;
+            }
+
+            // Sistema de puntuación básico para el desempate rápido
+            let highestCard = Math.max(...all.map(c => c.score));
+
+            if (pokers > 0) return { rank: 7, handName: "Póker", score: 700 + highestCard };
+            if (triples > 0 && pairs > 0) return { rank: 6, handName: "Full House", score: 600 + highestCard };
+            if (hasFlush) return { rank: 5, handName: "Color (Flush)", score: 500 + highestCard };
+            if (triples > 0) return { rank: 4, handName: "Trío", score: 400 + highestCard };
+            if (pairs >= 2) return { rank: 3, handName: "Doble Pareja", score: 300 + highestCard };
+            if (pairs === 1) return { rank: 2, handName: "Pareja", score: 200 + highestCard };
+            
+            return { rank: 1, handName: "Carta Alta", score: 100 + highestCard };
+        }
+
+        function revealWinner() {
+            // Mostrar cartas reales de la CPU
+            document.getElementById('cpu-cards').innerHTML = cpuHand.map(c => createCardHTML(c)).join('');
+            
+            let pEval = evaluate7Cards(playerHand, communityCards);
+            let cEval = evaluate7Cards(cpuHand, communityCards);
+
+            document.getElementById('cpu-hand-name').innerText = cEval.handName;
+
+            let msg = "";
+            if (pEval.score > cEval.score) {
+                msg = `¡Ganaste tú con ${pEval.handName}! 🎉`;
+            } else if (cEval.score > pEval.score) {
+                msg = `Gana la Computadora con ${cEval.handName}. 🤖`;
+            } else {
+                msg = "¡Empate técnico (Split Pot)! 🤝";
+            }
+
+            document.getElementById('message').innerText = msg;
+            document.getElementById('reveal-btn').style.display = "none";
+        }
+    </script>
+</body>
+</html>

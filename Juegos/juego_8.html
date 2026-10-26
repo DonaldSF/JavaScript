@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Memoria - Cartas</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            background-color: #2c3e50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            color: white;
+        }
+        h1 {
+            margin-bottom: 10px;
+        }
+        .stats {
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 100px);
+            grid-gap: 15px;
+        }
+        .card {
+            width: 100px;
+            height: 130px;
+            background-color: #3498db;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.3s, background-color 0.3s;
+        }
+        .card.flipped, .card.matched {
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            cursor: default;
+        }
+        .restart-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .restart-btn:hover {
+            background-color: #c0392b;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Juego de Memoria</h1>
+    <div class="stats">Movimientos: <span id="moves">0</span></div>
+    
+    <div class="game-board" id="gameBoard"></div>
+    
+    <button class="restart-btn" onclick="startGame()">Reiniciar Juego</button>
+
+    <script>
+        const symbols = ['🍎', '🍌', '🍒', '🍇', '🍉', '🍓', '🍍', '🥝'];
+        let cardsArray = [...symbols, ...symbols]; // Duplicar para hacer parejas
+        let firstCard = null;
+        let secondCard = null;
+        let lockBoard = false;
+        let moves = 0;
+        let matchedPairs = 0;
+
+        const board = document.getElementById('gameBoard');
+        const movesText = document.getElementById('moves');
+
+        function shuffle(array) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+
+        function startGame() {
+            board.innerHTML = '';
+            firstCard = null;
+            secondCard = null;
+            lockBoard = false;
+            moves = 0;
+            matchedPairs = 0;
+            movesText.innerText = moves;
+            
+            const shuffledCards = shuffle(cardsArray);
+
+            shuffledCards.forEach(symbol => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                card.dataset.symbol = symbol;
+                card.addEventListener('click', flipCard);
+                board.appendChild(card);
+            });
+        }
+
+        function flipCard() {
+            if (lockBoard) return;
+            if (this === firstCard) return;
+
+            this.classList.add('flipped');
+            this.innerText = this.dataset.symbol;
+
+            if (!firstCard) {
+                firstCard = this;
+                return;
+            }
+
+            secondCard = this;
+            incrementMoves();
+            checkMatch();
+        }
+
+        function incrementMoves() {
+            moves++;
+            movesText.innerText = moves;
+        }
+
+        function checkMatch() {
+            const isMatch = firstCard.dataset.symbol === secondCard.dataset.symbol;
+
+            if (isMatch) {
+                disableCards();
+            } else {
+                unflipCards();
+            }
+        }
+
+        function disableCards() {
+            firstCard.classList.add('matched');
+            secondCard.classList.add('matched');
+            resetBoard();
+            matchedPairs++;
+
+            if (matchedPairs === symbols.length) {
+                setTimeout(() => {
+                    alert(`¡Ganaste! Completaste el juego en ${moves} movimientos.`);
+                }, 300);
+            }
+        }
+
+        function unflipCards() {
+            lockBoard = true;
+            setTimeout(() => {
+                firstCard.classList.remove('flipped');
+                firstCard.innerText = '';
+                secondCard.classList.remove('flipped');
+                secondCard.innerText = '';
+                resetBoard();
+            }, 800);
+        }
+
+        function resetBoard() {
+            [firstCard, secondCard, lockBoard] = [null, null, false];
+        }
+
+        startGame();
+    </script>
+</body>
+</html>

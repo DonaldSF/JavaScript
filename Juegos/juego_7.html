@@ -24,8 +24,17 @@
             margin: 0;
             overflow: hidden;
         }
-        h1 { margin: 0 0 5px 0; font-size: 1.6rem; color: #fff; }
-        .controls-hint { color: #858585; font-size: 0.9rem; margin-bottom: 15px; text-align: center; }
+        h1 {
+            margin: 0 0 5px 0;
+            font-size: 1.6rem;
+            color: #fff;
+        }
+        .controls-hint {
+            color: #858585;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            text-align: center;
+        }
         .scoreboard {
             font-size: 1.5rem;
             font-weight: bold;
@@ -42,7 +51,6 @@
             border-radius: 4px;
             margin-bottom: 15px;
         }
-        /* Botón de reinicio al estilo VS Code */
         .reset-btn {
             background-color: var(--vs-blue);
             color: #ffffff;
@@ -65,215 +73,215 @@
 </head>
 <body>
 
-    <h1>⚽ Futbolín Vertical (Modo Intermedio) 🏆</h1>
+    <h1>⚽ Futbolín Vertical (Modo Fácil - Intermedio) 🏆</h1>
     <div class="controls-hint">
         Moverse: Flechas <strong>IZQUIERDA / DERECHA</strong>.<br>
         🚀 Usa la <strong>BARRA ESPACIADORA</strong> para acelerar y sorprender a la CPU.
     </div>
-    
+
     <div class="scoreboard">
         <span style="color: #4ec9b0;">Tú (Abajo): <span id="player-score">0</span></span>
         &nbsp;&nbsp;—&nbsp;&nbsp;
-        <span style="color: #ff5555;">CPU (Competitiva): <span id="cpu-score">0</span></span>
+        <span style="color: #ff5555;">CPU (Suave): <span id="cpu-score">0</span></span>
     </div>
 
     <canvas id="futbolinCanvas" width="450" height="750"></canvas>
-
-    <!-- Botón de reinicio interactivo -->
+    
     <button class="reset-btn" onclick="resetMatch()">Reiniciar Partido</button>
 
-    <script>
-        const canvas = document.getElementById("futbolinCanvas");
-        const ctx = canvas.getContext("2d");
+<script>
+    const canvas = document.getElementById("futbolinCanvas");
+    const ctx = canvas.getContext("2d");
 
-        let playerScore = 0;
-        let cpuScore = 0;
+    let playerScore = 0;
+    let cpuScore = 0;
 
-        // Pelota con velocidad fluida intermedia
-        let ball = { x: 225, y: 375, vx: 2.2, vy: 3.2, radius: 8 };
+    // Pelota con velocidad fluida intermedia
+    let ball = { x: 225, y: 375, vx: 2.2, vy: 3.2, radius: 8 };
 
-        // Dimensiones de las porterías
-        const goalWidth = 140;
-        const goalHeight = 15;
-        const goalLeft = (canvas.width - goalWidth) / 2; 
-        const goalRight = goalLeft + goalWidth;           
+    // Dimensiones de las porterías
+    const goalWidth = 140;
+    const goalHeight = 15;
+    const goalLeft = (canvas.width - goalWidth) / 2;
+    const goalRight = goalLeft + goalWidth;
 
-        // Configuración de las varillas
-        let playerBarsX = 150; 
-        let cpuBarsX = 150;    
-        const barHeight = 10;
-        const playerLength = 45; 
+    // Configuración de las varillas
+    let playerBarsX = 150;
+    let cpuBarsX = 150;
+    const barHeight = 10;
+    const playerLength = 45;
+    
+    const playerYPositions = Array.of(710, 600, 400, 200);
+    const cpuYPositions = Array.of(40, 150, 350, 550);
+    const playerCounts = Array.of(1, 3, 4, 3);
 
-        const playerYPositions = Array.of(710, 600, 400, 200);
-        const cpuYPositions = Array.of(40, 150, 350, 550);
-        const playerCounts = Array.of(1, 3, 4, 3);
+    let keys = {};
+    window.addEventListener("keydown", e => keys[e.key] = true);
+    window.addEventListener("keyup", e => keys[e.key] = false);
 
-        let keys = {};
-        window.addEventListener("keydown", e => keys[e.key] = true);
-        window.addEventListener("keyup", e => keys[e.key] = false);
+    function resetBall(dirY) {
+        ball.x = canvas.width / 2;
+        ball.y = canvas.height / 2;
+        ball.vx = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 1.5 + 1.2);
+        ball.vy = dirY * 3.2;
+    }
 
-        function resetBall(dirY) {
-            ball.x = canvas.width / 2;
-            ball.y = canvas.height / 2;
-            ball.vx = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 1.5 + 1.2);
-            ball.vy = dirY * 3.2;
-        }
+    function resetMatch() {
+        playerScore = 0;
+        cpuScore = 0;
+        document.getElementById("player-score").innerText = "0";
+        document.getElementById("cpu-score").innerText = "0";
+        playerBarsX = 150;
+        cpuBarsX = 150;
+        resetBall(Math.random() > 0.5 ? 1 : -1);
+    }
 
-        // Función para reiniciar por completo el marcador y las posiciones
-        function resetMatch() {
-            playerScore = 0;
-            cpuScore = 0;
-            document.getElementById("player-score").innerText = "0";
-            document.getElementById("cpu-score").innerText = "0";
-            playerBarsX = 150;
-            cpuBarsX = 150;
-            resetBall(Math.random() > 0.5 ? 1 : -1);
-        }
+    function drawField() {
+        ctx.strokeStyle = "rgba(255,255,255,0.3)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height / 2);
+        ctx.lineTo(canvas.width, canvas.height / 2);
+        ctx.stroke();
 
-        function drawField() {
-            ctx.strokeStyle = "rgba(255,255,255,0.3)";
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(0, canvas.height / 2);
-            ctx.lineTo(canvas.width, canvas.height / 2);
-            ctx.stroke();
-            
-            ctx.beginPath();
-            ctx.arc(canvas.width / 2, canvas.height / 2, 60, 0, Math.PI * 2);
-            ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(canvas.width / 2, canvas.height / 2, 60, 0, Math.PI * 2);
+        ctx.stroke();
 
-            // Porterías
-            ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
-            ctx.fillRect(goalLeft, 0, goalWidth, goalHeight);
-            ctx.fillRect(goalLeft, canvas.height - goalHeight, goalWidth, goalHeight);
+        // Porterías
+        ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+        ctx.fillRect(goalLeft, 0, goalWidth, goalHeight);
+        ctx.fillRect(goalLeft, canvas.height - goalHeight, goalWidth, goalHeight);
 
-            ctx.strokeStyle = "#fff";
-            ctx.lineWidth = 4;
-            ctx.strokeRect(goalLeft, 0, goalWidth, goalHeight);
-            ctx.strokeRect(goalLeft, canvas.height - goalHeight, goalWidth, goalHeight);
-        }
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 4;
+        ctx.strokeRect(goalLeft, 0, goalWidth, goalHeight);
+        ctx.strokeRect(goalLeft, canvas.height - goalHeight, goalWidth, goalHeight);
+    }
 
-        function getHorizontalOffsets(count) {
-            if (count === 1) return Array.of(0);
-            if (count === 3) return Array.of(-110, 0, 110);
-            if (count === 4) return Array.of(-135, -45, 45, 135);
-            return Array.of(0);
-        }
+    function getHorizontalOffsets(count) {
+        if (count === 1) return Array.of(0);
+        if (count === 3) return Array.of(-110, 0, 110);
+        if (count === 4) return Array.of(-135, -45, 45, 135);
+        return Array.of(0);
+    }
 
-        function drawFoosballBar(barX, y, count, isPlayer) {
-            ctx.fillStyle = "#569cd6";
-            ctx.fillRect(0, y - 2, canvas.width, 4);
+    function drawFoosballBar(barX, y, count, isPlayer) {
+        ctx.fillStyle = "#569cd6";
+        ctx.fillRect(0, y - 2, canvas.width, 4);
 
-            const offsets = getHorizontalOffsets(count);
-            ctx.fillStyle = isPlayer ? "#4ec9b0" : "#ff5555"; 
-
-            offsets.forEach(offset => {
-                let x = barX + offset + (canvas.width / 2) - (playerLength / 2);
-                ctx.fillRect(x, y - barHeight / 2, playerLength, barHeight);
-                
-                ctx.fillStyle = "#fff";
-                ctx.fillRect(x + (playerLength/2) - 4, y - 4, 8, 8);
-                ctx.fillStyle = isPlayer ? "#4ec9b0" : "#ff5555";
-            });
-        }
-
-        function checkBarCollision(barX, y, count) {
-            const offsets = getHorizontalOffsets(count);
-            let hit = false;
-
-            offsets.forEach(offset => {
-                let x = barX + offset + (canvas.width / 2) - (playerLength / 2);
-                if (ball.y + ball.radius > y - barHeight/2 && ball.y - ball.radius < y + barHeight/2) {
-                    if (ball.x > x && ball.x < x + playerLength) {
-                        hit = true;
-                    }
-                }
-            });
-            return hit;
-        }
-
-        function update() {
-            // Movimiento del jugador
-            let currentSpeed = keys[" "] ? 7.5 : 4.5; 
-            if (keys["ArrowLeft"] && playerBarsX > -70) playerBarsX -= currentSpeed;
-            if (keys["ArrowRight"] && playerBarsX < 70) playerBarsX += currentSpeed;
-
-            // IA RIVAL INTERMEDIA
-            let targetCpuX = ball.x - (canvas.width / 2);
-            if (cpuBarsX < targetCpuX && cpuBarsX < 70) cpuBarsX += 2.5;
-            if (cpuBarsX > targetCpuX && cpuBarsX > -70) cpuBarsX -= 2.5;
-
-            // Física de la pelota
-            ball.x += ball.vx;
-            ball.y += ball.vy;
-
-            if (ball.x - ball.radius < 0 || ball.x + ball.radius > canvas.width) {
-                ball.vx = -ball.vx;
-            }
-
-            // Portería Superior (CPU)
-            if (ball.y - ball.radius < 0) {
-                if (ball.x > goalLeft && ball.x < goalRight) {
-                    playerScore++;
-                    document.getElementById("player-score").innerText = playerScore;
-                    resetBall(1);
-                } else {
-                    ball.vy = -ball.vy;
-                    ball.y = ball.radius;
-                }
-            }
-
-            // Portería Inferior (Jugador)
-            if (ball.y + ball.radius > canvas.height) {
-                if (ball.x > goalLeft && ball.x < goalRight) {
-                    cpuScore++;
-                    document.getElementById("cpu-score").innerText = cpuScore;
-                    resetBall(-1);
-                } else {
-                    ball.vy = -ball.vy;
-                    ball.y = canvas.height - ball.radius;
-                }
-            }
-
-            // Colisiones barras tuyas
-            for (let i = 0; i < 4; i++) {
-                let y = playerYPositions[i];
-                let count = playerCounts[i];
-                if (checkBarCollision(playerBarsX, y, count) && ball.vy > 0) {
-                    ball.vy = -ball.vy * 1.05; 
-                    ball.y = y - barHeight/2 - ball.radius; 
-                }
-            }
-
-            // Colisiones barras CPU
-            for (let i = 0; i < 4; i++) {
-                let y = cpuYPositions[i];
-                let count = playerCounts[i];
-                if (checkBarCollision(cpuBarsX, y, count) && ball.vy < 0) {
-                    ball.vy = -ball.vy; 
-                    ball.y = y + barHeight/2 + ball.radius;
-                }
-            }
-
-            // Renderizar
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawField();
-
-            for (let i = 0; i < 4; i++) {
-                drawFoosballBar(playerBarsX, playerYPositions[i], playerCounts[i], true);
-                drawFoosballBar(cpuBarsX, cpuYPositions[i], playerCounts[i], false);
-            }
-
-            // Dibujar Pelota
+        const offsets = getHorizontalOffsets(count);
+        ctx.fillStyle = isPlayer ? "#4ec9b0" : "#ff5555";
+        
+        offsets.forEach(offset => {
+            let x = barX + offset + (canvas.width / 2) - (playerLength / 2);
+            ctx.fillRect(x, y - barHeight / 2, playerLength, barHeight);
             ctx.fillStyle = "#fff";
-            ctx.beginPath();
-            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.fillRect(x + (playerLength/2) - 4, y - 4, 8, 8);
+            ctx.fillStyle = isPlayer ? "#4ec9b0" : "#ff5555";
+        });
+    }
 
-            requestAnimationFrame(update);
+    function checkBarCollision(barX, y, count) {
+        const offsets = getHorizontalOffsets(count);
+        let hit = false;
+        
+        offsets.forEach(offset => {
+            let x = barX + offset + (canvas.width / 2) - (playerLength / 2);
+            if (ball.y + ball.radius > y - barHeight/2 && ball.y - ball.radius < y + barHeight/2) {
+                if (ball.x > x && ball.x < x + playerLength) {
+                    hit = true;
+                }
+            }
+        });
+        return hit;
+    }
+
+    function update() {
+        // Movimiento del jugador
+        let currentSpeed = keys[" "] ? 7.5 : 4.5;
+        if (keys["ArrowLeft"] && playerBarsX > -70) playerBarsX -= currentSpeed;
+        if (keys["ArrowRight"] && playerBarsX < 70) playerBarsX += currentSpeed;
+
+        // IA RIVAL MODIFICADA (Dificultad reducida)
+        let targetCpuX = ball.x - (canvas.width / 2);
+        
+        // Se reduce la velocidad de movimiento de la CPU de 2.5 a 1.5
+        // Además, solo se mueve si la pelota está a más de 12px de distancia (margen de error)
+        if (cpuBarsX < targetCpuX - 12 && cpuBarsX < 70) cpuBarsX += 1.5;
+        if (cpuBarsX > targetCpuX + 12 && cpuBarsX > -70) cpuBarsX -= 1.5;
+
+        // Física de la pelota
+        ball.x += ball.vx;
+        ball.y += ball.vy;
+
+        if (ball.x - ball.radius < 0 || ball.x + ball.radius > canvas.width) {
+            ball.vx = -ball.vx;
         }
 
-        update();
-    </script>
+        // Portería Superior (CPU)
+        if (ball.y - ball.radius < 0) {
+            if (ball.x > goalLeft && ball.x < goalRight) {
+                playerScore++;
+                document.getElementById("player-score").innerText = playerScore;
+                resetBall(1);
+            } else {
+                ball.vy = -ball.vy;
+                ball.y = ball.radius;
+            }
+        }
+
+        // Portería Inferior (Jugador)
+        if (ball.y + ball.radius > canvas.height) {
+            if (ball.x > goalLeft && ball.x < goalRight) {
+                cpuScore++;
+                document.getElementById("cpu-score").innerText = cpuScore;
+                resetBall(-1);
+            } else {
+                ball.vy = -ball.vy;
+                ball.y = canvas.height - ball.radius;
+            }
+        }
+
+        // Colisiones barras tuyas
+        for (let i = 0; i < 4; i++) {
+            let y = playerYPositions[i];
+            let count = playerCounts[i];
+            if (checkBarCollision(playerBarsX, y, count) && ball.vy > 0) {
+                ball.vy = -ball.vy * 1.05;
+                ball.y = y - barHeight/2 - ball.radius;
+            }
+        }
+
+        // Colisiones barras CPU
+        for (let i = 0; i < 4; i++) {
+            let y = cpuYPositions[i];
+            let count = playerCounts[i];
+            if (checkBarCollision(cpuBarsX, y, count) && ball.vy < 0) {
+                ball.vy = -ball.vy;
+                ball.y = y + barHeight/2 + ball.radius;
+            }
+        }
+
+        // Renderizar
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawField();
+
+        for (let i = 0; i < 4; i++) {
+            drawFoosballBar(playerBarsX, playerYPositions[i], playerCounts[i], true);
+            drawFoosballBar(cpuBarsX, cpuYPositions[i], playerCounts[i], false);
+        }
+
+        // Dibujar Pelota
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        requestAnimationFrame(update);
+    }
+
+    update();
+</script>
 </body>
 </html>
