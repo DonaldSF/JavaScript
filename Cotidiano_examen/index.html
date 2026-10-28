@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+
+<head>
+
+    <title>Boletín Estudiantil</title>
+    <link rel="stylesheet" href="misEstilos.css">
+    <script src="boletin.js"></script>
+</head>
+<body>
+
+    <div class="card-boletin">
+
+        <header class="boletin-header">
+            <div class="logo-placeholder">🏫</div>
+            <h1>CTP San Rafael de Alajuela</h1>
+            <h2>Boletín Estudiantil</h2>
+            <div class="datos-alumno">
+                <p><strong>Alumno:</strong> <span id="nombre-alumno">Donald Sandoval</span></p>
+                <p><strong>Especialidad:</strong> Desarrollo Web</p>
+            </div>
+        </header>
+
+        <main class="boletin-body">
+            <h3>Calificaciones Registradas</h3>
+            <ul id="lista-notas" class="notas-list">
+            </ul>
+
+            <section class="panel-consultas">
+                
+                <div class="control-box">
+                    <button onclick="calcularPromedio()">Calcular promedio</button>
+                    <div class="resultado-wrapper">
+                        <span class="label">Promedio:</span>
+                        <span id="res-promedio" class="resultado-val">-</span>
+                    </div>
+                </div>
+
+                <div class="control-box">
+                    <button onclick="notaMasAlta()">Buscar nota más alta</button>
+                    <div class="resultado-wrapper">
+                        <span class="label">Nota más alta:</span>
+                        <span id="res-maxima" class="resultado-val">-</span>
+                    </div>
+                </div>
+
+                <div class="control-box">
+                    <button onclick="hayAplazados()">Consultar aplazo</button>
+                    <div class="resultado-wrapper">
+                        <span class="label">¿Hubo algún aplazo?:</span>
+                        <span id="res-aplazado" class="resultado-val">-</span>
+                    </div>
+                </div>
+
+            </section>
+        </main>
+    </div>
+
+</body>
+</html>

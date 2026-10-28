@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Fórmula 1 - Gran Premio (10 Vueltas)</title>
+    <style>
+        body { margin: 0; background: #111; text-align: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: white; overflow: hidden; }
+        h1 { margin: 5px 0; font-size: 24px; color: #e10600; text-transform: uppercase; letter-spacing: 2px; }
+        .hud { display: flex; justify-content: center; gap: 30px; font-size: 20px; font-weight: bold; margin-bottom: 5px; }
+        .hud span { background: #222; padding: 5px 15px; border-radius: 5px; border: 1px solid #444; }
+        canvas { background: #1e5e1e; display: block; margin: 0 auto; border: 4px solid #333; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
+        .controls { margin-top: 5px; font-size: 14px; color: #aaa; }
+        #mensaje { color: #ffeb3b; font-size: 22px; font-weight: bold; margin-top: 5px; min-height: 28px; }
+    </style>
+</head>
+<body>
+
+    <h1>F1 Canvas Grand Prix</h1>
+    <div class="hud">
+        <span>VUELTA: <span id="vueltas" style="color: #e10600;">1 / 10</span></span>
+        <span>VELOCIDAD: <span id="velocidad" style="color: #00e676;">0 km/h</span></span>
+    </div>
+    
+    <canvas id="f1Canvas" width="1000" height="650"></canvas>
+    
+    <div id="mensaje">¡Semáforo en verde! ¡Acelera!</div>
+    <div class="controls">Controles: <b>Flecha Arriba</b> = Acelerar | <b>Flecha Abajo</b> = Frenar/Reversa | <b>Flechas Izquierda/Derecha</b> = Girar</div>
+
+    <script>
+        const canvas = document.getElementById("f1Canvas");
+        const ctx = canvas.getContext("2d");
+
+        // Estado del juego
+        let vueltaActual = 1;
+        const VUELTAS_TOTALES = 10;
+        let juegoTerminado = false;
+        let cruzandoMeta = false; 
+
+        // Teclado
+        const keys = {};
+        window.addEventListener("keydown", e => keys[e.code] = true);
+        window.addEventListener("keyup", e => keys[e.code] = false);
+
+        // Definición de la Pista (Puntos centrales del circuito)
+        // Crea un circuito de F1 con rectas, curvas cerradas y chicanas
+        const trackPoints = [
+            {x: 150, y: 550}, // Línea de salida / meta
+            {x: 550, y: 550}, // Recta principal
+            {x: 750, y: 550}, // Curva 1 (derecha)
+            {x: 900, y: 400}, // Curva 2
+            {x: 900, y: 200}, // Recta trasera este
+            {x: 750, y: 100}, // Curva 3 norte
+            {x: 500, y: 100}, // Recta norte
+            {x: 450, y: 220}, // Chicana entrada
+            {x: 350, y: 180}, // Chicana salida
+            {x: 250, y: 100}, // Curva oeste alta
+            {x: 100, y: 200}, // Horquilla oeste
+            {x: 100, y: 400}, // Recta lateral oeste
+        ];
+        const ANCHO_PISTA = 90;
+
+        // Clase Monoplaza (Auto F1)
+        class FormulaCar {
+            constructor(x, y, angle) {
+                this.x = x;
+                this.y = y;
+                this.angle = angle; // En radianes
+                this.speed = 0;
+                this.maxSpeed = 7;
+                this.acc = 0.15;
+                this.dec = 0.08;
+                this.friction = 0.03;
+                this.steerSpeed = 0.05;
+                this.w = 32;
+                this.h = 16;
+            }
+
+            update() {
+                if (juegoTerminado) {
+                    this.speed *= 0.95;
+                    return;
+                }
+
+                // Manejo de físicas y controles
+                if (keys["ArrowUp"]) {
+                    this.speed += this.acc;
+                    if (this.speed > this.maxSpeed) this.speed = this.maxSpeed;
+                } else if (keys["ArrowDown"]) {
+                    this.speed -= this.dec * 1.5; // Freno más fuerte
+                    if (this.speed < -2) this.speed = -2; // Reversa lenta
+                } else {
+                    // Desaceleración / Fricción por defecto
+                    if (this.speed > 0) this.speed -= this.friction;
+                    if (this.speed < 0) this.speed += this.friction;
+                    if (Math.abs(this.speed) < 0.05) this.speed = 0;
+                }
+
+                // Solo gira si se está moviendo
+                if (this.speed !== 0) {
+                    const direction = this.speed > 0 ? 1 : -1;
+                    if (keys["ArrowLeft"]) this.angle -= this.steerSpeed * direction;
+                    if (keys["ArrowRight"]) this.angle += this.steerSpeed * direction;
+                }
+
+                // Avanzar según el ángulo actual
+                this.x += Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed;
+
+                // Verificar si se sale de la pista (Penalización de velocidad estilo "Puzolana/Césped")
+                if (!checkEnPista(this.x, this.y)) {
+                    if (this.speed > 1.5) this.speed = 1.5; // Reduce la velocidad drásticamente
+                }
+
+                // Sistema de control de vueltas (Línea de Meta vertical en X = 300, entre Y: 500 y 600)
+                if (this.x > 300 && this.x < 320 && this.y > 500 && this.y < 600) {
+                    if (!cruzandoMeta) {
+                        // Asegura que viene en dirección correcta (hacia la derecha del circuito)
+                        if (Math.cos(this.angle) > 0) {
+                            cruzandoMeta = true;
+                            if (vueltaActual < VUELTAS_TOTALES) {
+                                vueltaActual++;
+                                document.getElementById("vueltas").innerText = `${vueltaActual} / ${VUELTAS_TOTALES}`;
+                                mostrarMensaje(`¡Vuelta ${vueltaActual - 1} completada!`);
+                            } else if (vueltaActual === VUELTAS_TOTALES) {
+                                juegoTerminado = true;
+                                document.getElementById("vueltas").innerText = `¡TERMINADO!`;
+                                mostrarMensaje("🏁 ¡BANDERA A CUADROS! Has ganado el Gran Premio 🏁");
+                            }
+                        }
+                    }
+                } else if (this.x < 250 || this.x > 370) {
+                    // Resetea el gatillo cuando se aleja de la meta
+                    cruzandoMeta = false;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+
+                // Cuerpo del F1 (Rojo Ferrari)
+                ctx.fillStyle = "#e10600";
+                ctx.fillRect(-this.w/2, -this.h/3, this.w, (this.h*2)/3);
+
+                // Alerón Delantero
+                ctx.fillStyle = "#111";
+                ctx.fillRect(this.w/2 - 4, -this.h/2, 4, this.h);
+
+                // Alerón Trasero
+                ctx.fillStyle = "#111";
+                ctx.fillRect(-this.w/2, -this.h/2 - 2, 4, this.h + 4);
+
+                // Neumáticos (4)
+                ctx.fillStyle = "#222";
+                ctx.fillRect(this.w/4, -this.h/2 - 2, 8, 4); // Delantera Izq
+                ctx.fillRect(this.w/4, this.h/2 - 2, 8, 4);  // Delantera Der
+                ctx.fillRect(-this.w/3, -this.h/2 - 2, 9, 4); // Trasera Izq
+                ctx.fillRect(-this.w/3, this.h/2 - 2, 9, 4);  // Trasera Der
+
+                // Casco del Piloto (Amarillo)
+                ctx.fillStyle = "#ffeb3b";
+                ctx.beginPath();
+                ctx.arc(-2, 0, 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        const player = new FormulaCar(200, 550, 0); // Empieza en la recta principal apuntando a la derecha
+
+        // Función matemática para saber la distancia de un punto a un segmento de línea
+        function distToSegment(p, v, w) {
+            const l2 = Math.pow(v.x - w.x, 2) + Math.pow(v.y - w.y, 2);
+            if (l2 === 0) return Math.pow(p.x - v.x, 2) + Math.pow(p.y - v.y, 2);
+            let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+            t = Math.max(0, Math.min(1, t));
+            return Math.sqrt(Math.pow(p.x - (v.x + t * (w.x - v.x)), 2) + Math.pow(p.y - (v.y + t * (w.y - v.y)), 2));
+        }
+
+        // Verifica si el coche está dentro de los límites del circuito de asfalto
+        function checkEnPista(x, y) {
+            let p = {x: x, y: y};
+            for (let i = 0; i < trackPoints.length; i++) {
+                let v = trackPoints[i];
+                let w = trackPoints[(i + 1) % trackPoints.length];
+                if (distToSegment(p, v, w) < ANCHO_PISTA / 2) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function dibujarPista() {
+            // 1. Dibujar Piano / Bordillos externos (Rojo y Blanco)
+            ctx.strokeStyle = "#fff";
+            ctx.lineWidth = ANCHO_PISTA + 12;
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+            ctx.beginPath();
+            trackPoints.forEach((pt, i) => {
+                if (i === 0) ctx.moveTo(pt.x, pt.y);
+                else ctx.lineTo(pt.x, pt.y);
+            });
+            ctx.closePath();
+            ctx.stroke();
+
+            // Bordillo Rojo intermitente usando patrones de guiones
+            ctx.strokeStyle = "#e10600";
+            ctx.setLineDash([20, 20]);
+            ctx.stroke();
+            ctx.setLineDash([]); // Resetear
+
+            // 2. Dibujar el Asfalto de la pista (Gris Oscuro)
+            ctx.strokeStyle = "#383838";
+            ctx.lineWidth = ANCHO_PISTA;
+            ctx.beginPath();
+            trackPoints.forEach((pt, i) => {
+                if (i === 0) ctx.moveTo(pt.x, pt.y);
+                else ctx.lineTo(pt.x, pt.y);
+            });
+            ctx.closePath();
+            ctx.stroke();
+
+            // 3. Líneas de seguridad blancas laterales internas
+            ctx.strokeStyle = "#eeeeee";
+            ctx.lineWidth = 2;
+            ctx.setLineDash([10, 15]);
+            ctx.stroke();
+            
+            ctx.setLineDash([]);
+// 4. Línea de Meta (Cuadriculada clásica de F1)
+ctx.save();
+ctx.fillStyle = "#fff";
+ctx.fillRect(300, 550 - ANCHO_PISTA/2, 16, ANCHO_PISTA);
+ctx.fillStyle = "#000";
+for (let y = 550 - ANCHO_PISTA/2; y < 550 + ANCHO_PISTA/2; y += 10) {
+ctx.fillRect(300, y, 8, 5);
+ctx.fillRect(308, y + 5, 8, 5);
+}
+ctx.restore();
+}
+function mostrarMensaje(txt) {
+document.getElementById("mensaje").innerText = txt;
+}
+// Bucle principal de renderizado y física
+function gameLoop() {
+// Fondo verde césped
+ctx.fillStyle = "#1e5e1e";
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+// Dibujar circuito
+dibujarPista();
+// Actualizar y dibujar coche
+player.update();
+player.draw();
+// Actualizar HUD del velocímetro simulado (máximo ~320 km/h)
+const kmh = Math.round((Math.abs(player.speed) / player.maxSpeed) * 330);
+document.getElementById("velocidad").innerText = $ {kmh} km/h ;
+requestAnimationFrame(gameLoop);
+}
+// Iniciar juego
+gameLoop();
+

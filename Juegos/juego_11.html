@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Air Hockey PvP - Fixed</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #1a1a24;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+            font-size: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #00f0ff;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+        }
+
+        .controls {
+            display: flex;
+            gap: 50px;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+            color: #ccc;
+        }
+
+        #gameCanvas {
+            background-color: #2c3e50;
+            border: 6px solid #7f8c8d;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Air Hockey PvP</h1>
+    
+    <div class="controls">
+        <div><strong style="color: #3498db;">Mazo Azul:</strong> W A S D</div>
+        <div><strong style="color: #e74c3c;">Mazo Rojo:</strong> Flechas Dirección</div>
+    </div>
+
+    <canvas id="gameCanvas" width="900" height="550"></canvas>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // Dimensiones del juego
+        const MALLET_RADIUS = 30;
+        const PUCK_RADIUS = 18;
+        const GOAL_SIZE = 160;
+        const FRICTION = 0.992; 
+
+        const goalTop = (canvas.height - GOAL_SIZE) / 2;
+        const goalBottom = goalTop + GOAL_SIZE;
+
+        // Jugador 1 (Izquierda - Azul)
+        const p1 = {
+            x: 150,
+            y: canvas.height / 2,
+            radius: MALLET_RADIUS,
+            color: "#3498db",
+            score: 0
+        };
+
+        // Jugador 2 (Derecha - Rojo)
+        const p2 = {
+            x: canvas.width - 150,
+            y: canvas.height / 2,
+            radius: MALLET_RADIUS,
+            color: "#e74c3c",
+            score: 0
+        };
+
+        // La Ficha (Puck)
+        const puck = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: PUCK_RADIUS,
+            vx: 0,
+            vy: 0,
+            color: "#f1c40f"
+        };
+
+        // Estado del teclado (guardando minúsculas uniformes)
+        const keys = {};
+        window.addEventListener("keydown", (e) => keys[e.key.toLowerCase()] = true);
+        window.addEventListener("keyup", (e) => keys[e.key.toLowerCase()] = false);
+
+        function resetField(scorer) {
+            puck.x = canvas.width / 2;
+            puck.y = canvas.height / 2;
+            puck.vx = scorer === 1 ? -3 : 3; 
+            puck.vy = (Math.random() - 0.5) * 4;
+
+            p1.x = 150;
+            p1.y = canvas.height / 2;
+            p2.x = canvas.width - 150;
+            p2.y = canvas.height / 2;
+        }
+
+        // Manejo corregido de colisiones físicas circulares
+        function handleMalletCollision(player) {
+            let dx = puck.x - player.x;
+            let dy = puck.y - player.y;
+            let distance = Math.sqrt(dx * dx + dy * dy);
+            let minDist = puck.radius + player.radius;
+
+            if (distance < minDist) {
+                let nx = dx / distance;
+                let ny = dy / distance;
+
+                // Empujar EXCLUSIVAMENTE al puck para que no altere las coordenadas base del mazo
+                puck.x = player.x + nx * minDist;
+                puck.y = player.y + ny * minDist;
+
+                let kx = puck.vx;
+                let ky = puck.vy;
+                
+                puck.vx = (kx * -0.5) + (nx * 9);
+                puck.vy = (ky * -0.5) + (ny * 9);
+            }
+        }
+
+        function update() {
+            let speed = 5;
+
+            // Movimiento Jugador 1 (W, A, S, D)
+            if (keys["w"]) p1.y -= speed;
+            if (keys["s"]) p1.y += speed;
+            if (keys["a"]) p1.x -= speed;
+            if (keys["d"]) p1.x += speed;
+
+            // Restricción estricta del Jugador 1 (Lado Izquierdo)
+            if (p1.x < p1.radius) p1.x = p1.radius;
+            if (p1.x > canvas.width / 2 - p1.radius - 2) p1.x = canvas.width / 2 - p1.radius - 2;
+            if (p1.y < p1.radius) p1.y = p1.radius;
+            if (p1.y > canvas.height - p1.radius) p1.y = canvas.height - p1.radius;
+
+            // Movimiento Jugador 2 (Flechas)
+            if (keys["arrowup"]) p2.y -= speed;
+            if (keys["arrowdown"]) p2.y += speed;
+            if (keys["arrowleft"]) p2.x -= speed;
+            if (keys["arrowright"]) p2.x += speed;
+
+            // Restricción estricta del Jugador 2 (Lado Derecho)
+            if (p2.x < canvas.width / 2 + p2.radius + 2) p2.x = canvas.width / 2 + p2.radius + 2;
+            if (p2.x > canvas.width - p2.radius) p2.x = canvas.width - p2.radius;
+            if (p2.y < p2.radius) p2.y = p2.radius;
+            if (p2.y > canvas.height - p2.radius) p2.y = canvas.height - p2.radius;
+
+            // Movimiento físico y límites de velocidad máxima de la ficha
+            puck.vx *= FRICTION;
+            puck.vy *= FRICTION;
+            
+            // Capar velocidad máxima para evitar que el puck atraviese paredes por glitches
+            const maxSpeed = 15;
+            let currentSpeed = Math.sqrt(puck.vx * puck.vx + puck.vy * puck.vy);
+            if (currentSpeed > maxSpeed) {
+                puck.vx = (puck.vx / currentSpeed) * maxSpeed;
+                puck.vy = (puck.vy / currentSpeed) * maxSpeed;
+            }
+
+            puck.x += puck.vx;
+            puck.y += puck.vy;
+
+            // Rebotes superiores e inferiores
+            if (puck.y - puck.radius <= 0) {
+                puck.y = puck.radius;
+                puck.vy = -puck.vy;
+            }
+            if (puck.y + puck.radius >= canvas.height) {
+                puck.y = canvas.height - puck.radius;
+                puck.vy = -puck.vy;
+            }
+
+            // Porterías vs Paredes laterales
+            if (puck.y < goalTop || puck.y > goalBottom) {
+                if (puck.x - puck.radius <= 0) {
+                    puck.x = puck.radius;
+                    puck.vx = -puck.vx;
+                }
+                if (puck.x + puck.radius >= canvas.width) {
+                    puck.x = canvas.width - puck.radius;
+                    puck.vx = -puck.vx;
+                }
+            } else {
+                if (puck.x < 0) {
+                    p2.score++;
+                    resetField(2);
+                } else if (puck.x > canvas.width) {
+                    p1.score++;
+                    resetField(1);
+                }
+            }
+
+            // Resolver colisiones
+            handleMalletCollision(p1);
+            handleMalletCollision(p2);
+        }
+
+        function draw() {
+            ctx.fillStyle = "#2c3e50";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+            ctx.lineWidth = 4;
+
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height / 2, 80, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.strokeStyle = "#e74c3c";
+            ctx.beginPath();
+            ctx.arc(canvas.width, canvas.height / 2, goalTop - 100, Math.PI * 0.5, Math.PI * 1.5);
+            ctx.stroke();
+
+            ctx.strokeStyle = "#3498db";
+            ctx.beginPath();
+            ctx.arc(0, canvas.height / 2, goalTop - 100, Math.PI * 1.5, Math.PI * 0.5);
+            ctx.stroke();
+
+            ctx.fillStyle = "#111";
+            ctx.fillRect(0, goalTop, 8, GOAL_SIZE);
+            ctx.fillRect(canvas.width - 8, goalTop, 8, GOAL_SIZE);
+
+            ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+            ctx.font = "bold 80px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(p1.score, canvas.width / 4, canvas.height / 2 + 30);
+            ctx.fillText(p2.score, (canvas.width / 4) * 3, canvas.height / 2 + 30);
+
+            // Jugador 1
+            ctx.fillStyle = p1.color;
+            ctx.beginPath();
+            ctx.arc(p1.x, p1.y, p1.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = "#fff";
+            ctx.stroke();
+
+            // Jugador 2
+            ctx.fillStyle = p2.color;
+            ctx.beginPath();
+            ctx.arc(p2.x, p2.y, p2.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Ficha
+            ctx.fillStyle = puck.color;
+            ctx.beginPath();
+            ctx.arc(puck.x, puck.y, puck.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "#fff";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        resetField(1);
+        gameLoop();
+    </script>
+</body>
+</html>

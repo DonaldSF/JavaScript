@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retro Ping Pong PvP</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #111;
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            font-size: 2rem;
+            letter-spacing: 2px;
+        }
+
+        .controls-info {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        #gameCanvas {
+            background-color: #000;
+            border: 4px solid #fff;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <h1>PING PONG PvP</h1>
+    
+    <div class="controls-info">
+        <div><strong>Jugador 1:</strong> W (Arriba) / S (Abajo)</div>
+        <div><strong>Jugador 2:</strong> ↑ (Arriba) / ↓ (Abajo)</div>
+    </div>
+
+    <canvas id="gameCanvas" width="800" height="500"></canvas>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // Configuración de dimensiones y juego
+        const PADDLE_WIDTH = 12;
+        const PADDLE_HEIGHT = 90;
+        const BALL_RADIUS = 8;
+        const INITIAL_BALL_SPEED = 5;
+        const SPEED_INCREMENT = 0.5;
+
+        // Estado de los Jugadores
+        const p1 = {
+            x: 20,
+            y: canvas.height / 2 - PADDLE_HEIGHT / 2,
+            score: 0,
+            color: "#3498db"
+        };
+
+        const p2 = {
+            x: canvas.width - 20 - PADDLE_WIDTH,
+            y: canvas.height / 2 - PADDLE_HEIGHT / 2,
+            score: 0,
+            color: "#e74c3c"
+        };
+
+        // Estado de la Pelota
+        const ball = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            speedX: INITIAL_BALL_SPEED,
+            speedY: INITIAL_BALL_SPEED
+        };
+
+        // Registro de teclas presionadas
+        const keysPressed = {};
+
+        window.addEventListener("keydown", (e) => {
+            keysPressed[e.key] = true;
+        });
+
+        window.addEventListener("keyup", (e) => {
+            keysPressed[e.key] = false;
+        });
+
+        // Reiniciar la pelota al centro tras un punto
+        function resetBall(direction) {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.speedX = direction * INITIAL_BALL_SPEED;
+            ball.speedY = (Math.random() > 0.5 ? 1 : -1) * INITIAL_BALL_SPEED;
+        }
+
+        // Lógica de movimientos y colisiones
+        function update() {
+            // Movimiento Jugador 1 (W y S)
+            if (keysPressed["w"] || keysPressed["W"]) {
+                p1.y = Math.max(0, p1.y - 6);
+            }
+            if (keysPressed["s"] || keysPressed["S"]) {
+                p1.y = Math.min(canvas.height - PADDLE_HEIGHT, p1.y + 6);
+            }
+
+            // Movimiento Jugador 2 (Flechas)
+            if (keysPressed["ArrowUp"]) {
+                p2.y = Math.max(0, p2.y - 6);
+            }
+            if (keysPressed["ArrowDown"]) {
+                p2.y = Math.min(canvas.height - PADDLE_HEIGHT, p2.y + 6);
+            }
+
+            // Movimiento de la pelota
+            ball.x += ball.speedX;
+            ball.y += ball.speedY;
+
+            // Colisión con techo y suelo
+            if (ball.y - BALL_RADIUS <= 0 || ball.y + BALL_RADIUS >= canvas.height) {
+                ball.speedY = -ball.speedY;
+            }
+
+            // Detección de colisión con la paleta izquierda (Jugador 1)
+            if (ball.speedX < 0) {
+                if (ball.x - BALL_RADIUS <= p1.x + PADDLE_WIDTH && 
+                    ball.y >= p1.y && ball.y <= p1.y + PADDLE_HEIGHT) {
+                    
+                    // Invertir dirección y aumentar velocidad progresivamente
+                    ball.speedX = -ball.speedX + SPEED_INCREMENT;
+                    // Efecto de ángulo según dónde golpee la paleta
+                    let relativeIntersectY = (p1.y + (PADDLE_HEIGHT / 2)) - ball.y;
+                    let normalizedIntersectY = relativeIntersectY / (PADDLE_HEIGHT / 2);
+                    ball.speedY = -normalizedIntersectY * 5;
+                }
+            }
+
+            // Detección de colisión con la paleta derecha (Jugador 2)
+            if (ball.speedX > 0) {
+                if (ball.x + BALL_RADIUS >= p2.x && 
+                    ball.y >= p2.y && ball.y <= p2.y + PADDLE_HEIGHT) {
+                    
+                    ball.speedX = -ball.speedX - SPEED_INCREMENT;
+                    let relativeIntersectY = (p2.y + (PADDLE_HEIGHT / 2)) - ball.y;
+                    let normalizedIntersectY = relativeIntersectY / (PADDLE_HEIGHT / 2);
+                    ball.speedY = -normalizedIntersectY * 5;
+                }
+            }
+
+            // Anotación de puntos
+            if (ball.x - BALL_RADIUS < 0) {
+                p2.score++;
+                resetBall(1); // Sale hacia el jugador 2
+            } else if (ball.x + BALL_RADIUS > canvas.width) {
+                p1.score++;
+                resetBall(-1); // Sale hacia el jugador 1
+            }
+        }
+
+        // Renderizado gráfico en pantalla
+        function draw() {
+            // Limpiar pantalla anterior
+            ctx.fillStyle = "#000";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Red central punteada
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+            ctx.lineWidth = 4;
+            ctx.setLineDash([15, 15]);
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+            ctx.setLineDash([]); // Resetear patrón de línea
+
+            // Dibujar Marcador
+            ctx.fillStyle = "#fff";
+            ctx.font = "48px 'Courier New'";
+            ctx.textAlign = "center";
+            ctx.fillText(p1.score, canvas.width / 4, 60);
+            ctx.fillText(p2.score, (canvas.width / 4) * 3, 60);
+
+            // Dibujar Paletas
+            ctx.fillStyle = p1.color;
+            ctx.fillRect(p1.x, p1.y, PADDLE_WIDTH, PADDLE_HEIGHT);
+
+            ctx.fillStyle = p2.color;
+            ctx.fillRect(p2.x, p2.y, PADDLE_WIDTH, PADDLE_HEIGHT);
+
+            // Dibujar Pelota
+            ctx.fillStyle = "#fff";
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, BALL_RADIUS, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Bucle principal del juego
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Iniciar el loop
+        gameLoop();
+    </script>
+</body>
+</html>

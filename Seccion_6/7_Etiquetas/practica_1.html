@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+
+<head>
+
+    <title>Practica 1</title>
+</head>
+<body>
+    <script>
+        function testLoop(miArray) {
+
+        bucleExterno: for (let i = 0; i < miArray.length; i++) {
+            for (let j = 0; j < miArray[i].length; j++) {
+            let numero = miArray[i][j];
+    
+            console.log(numero);
+            if (numero === 0) {
+            break bucleExterno;
+    }
+    }
+}
+}
+
+let miArray = [[2, 4, 5], [3, 0, 6], [9, 4, 7]];
+testLoop(miArray);
+
+    </script>
+    
+</body>
+</html>

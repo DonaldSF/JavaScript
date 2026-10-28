@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>Practica 1</title>
+</head>
+<body>
+
+    <script>
+        function testLoop(miArray) {
+            for (let letra of miArray) {
+                if (letra !== "A") {
+                    break;
+                }
+                console.log(letra);
+            }
+        }
+
+        let listaLetras = ['A', 'A', 'B', 'A', 'B', 'B', 'A'];
+        
+        testLoop(listaLetras);
+    </script>
+
+</body>
+</html>
